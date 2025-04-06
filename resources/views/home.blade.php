@@ -44,7 +44,7 @@
 
     <!-- Music Audio Element -->
     <audio id="background-music" autoplay>
-        <source src="{{ asset('music/AnimalCrossing.mp3') }}" type="audio/mpeg">
+        <source src="{{ asset('music/LittleRoot.mp3') }}" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
