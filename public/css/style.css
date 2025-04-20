@@ -202,6 +202,7 @@ input::placeholder {
     transform: translateY(0);
 }
 
+
 .recommendation-wrapper {
     position: relative;
     display: flex;
@@ -236,19 +237,13 @@ input::placeholder {
 }
 
 .recommendation-container {
-    margin-top: 80px;
     display: flex;
-    flex-wrap: nowrap; /* Ensure cards stay in a row */
-    justify-content: flex-start; /* Align cards to the left */
-    gap: 10px;
-    padding: 15px;
-    scroll-behavior: smooth;
-    width: 95%;
-    overflow-x: auto;
-    white-space: nowrap;
-    scroll-behavior: smooth;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 40px 0;
+    width: 100%;
 }
-
 
 .game-card {
     margin: 0 10px;
@@ -271,7 +266,7 @@ input::placeholder {
 }
 
 .game-card h3 {
-    font-size: 30px; /* Adjusted for better fit */
+    font-size: 56px; /* Adjusted for better fit */
     font-weight: bold;
     word-wrap: break-word; /* Breaks long words */
     overflow: hidden; /* Hides overflowing text */
@@ -282,14 +277,13 @@ input::placeholder {
 }
 
 .game-card p {
-    font-size: 24px;
+    font-size: 32px;
     line-height: 1.4;
     word-wrap: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 
 .game-image {
     width: 100%;
@@ -310,3 +304,158 @@ input::placeholder {
     transform: translateY(-150px); /* Adjust height as needed */
 }
 
+.landscape-info a {
+    margin-top: 10px;
+    font-size: 32px;
+    color: #fcda00;
+    text-decoration: none;
+    position: relative;
+    font-weight: bold;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.landscape-info a::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b
+    );
+    background-size: 300% 100%;
+    background-repeat: repeat;
+    animation: none;
+    bottom: 0;
+    left: 0;
+    transition: width 0.4s ease;
+}
+
+.landscape-info a:hover::after {
+    width: 100%;
+    animation: animateLine 3s linear infinite;
+}
+
+@keyframes animateLine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.landscape-info a:hover {
+    color: #ffcc00;
+    transform: translateY(-3px);
+}
+
+.landscape-info p {
+    font-size: 22px;
+    margin-top: 30px;
+}
+
+.landscape-card {
+    position: relative;
+    width: 500px;
+    height: 300px;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.landscape-card:hover {
+    transform: scale(1.05);
+}
+
+.landscape-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    transition: opacity 0.4s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.landscape-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 15px;
+    width: 100%;
+    background-color: rgba(74, 74, 74, 0.079);
+    color: white;
+    z-index: 2;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border-radius: 0 0 10px 10px;
+}
+
+.landscape-card:hover .landscape-info {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.media-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* Optional overlay for non-trailer hover */
+.no-trailer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0); /* transparent by default */
+    transition: background 0.3s ease;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+/* When hovered */
+.media-container:hover .no-trailer-overlay {
+    background: rgba(0, 0, 0, 0.4); /* subtle dark overlay */
+}
+
+
+/* When hovering over the card */
+.media-container:hover .landscape-trailer {
+    opacity: 1;
+}
+
+.media-container:hover .landscape-image {
+    opacity: 0;
+}
+
+.media-container:hover .landscape-info {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.landscape-image,
+.landscape-trailer {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.landscape-trailer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+}
