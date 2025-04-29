@@ -1,0 +1,183 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap');
+
+/* Body and container */
+body { 
+    font-family: 'Orbitron', sans-serif;
+    background-color: #0a0a0a; 
+    color: #fff; 
+    padding: 2rem; 
+}
+
+.container { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    position: relative;
+}
+
+/* Search box */
+.search-box input {
+    width: 100%;
+    padding: 14px;
+    font-size: 14px;
+    border: 2px solid #ff2d75;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    background-color: #121212;
+    color: #fff;
+    transition: border 0.3s;
+}
+.search-box input:focus {
+    outline: none;
+    border-color: #ff6ea2;
+    box-shadow: 0 0 10px #ff6ea2;
+}
+
+/* Suggestions dropdown */
+.suggestions {
+    border: 1px solid #ff2d75;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #000;
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(255, 45, 117, 0.3);
+}
+
+.suggestions div {
+    padding: 12px;
+    cursor: pointer;
+    color: white;
+    background-color: #000;
+    transition: background-color 0.2s;
+}
+
+.suggestions div:hover {
+    background-color: #333;
+}
+
+/* Game info panel */
+.game-info {
+    margin-bottom: 30px;
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 16px;
+    border: 2px solid #292929;
+    box-shadow: 0 0 10px rgba(255, 105, 180, 0.2);
+    transition: transform 0.2s;
+}
+.game-info:hover {
+    transform: translateY(-5px);
+}
+
+/* Star ratings */
+.star-rating {
+    font-size: 22px;
+    cursor: pointer;
+    color: #444;
+}
+.star-rating .filled {
+    color: gold;
+}
+
+/* Comments section */
+.comments-section {
+    margin-top: 40px;
+}
+
+/* Individual comment card */
+.comment {
+    background-color: #181818;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border-left: 4px solid #ff2d75;
+    box-shadow: 0 2px 8px rgba(255, 45, 117, 0.1);
+    position: relative;
+}
+.comment small {
+    color: #aaa;
+    font-size: 11px;
+    display: block;
+    margin-top: 6px;
+}
+.comment::before {
+    content: "🗨️";
+    position: absolute;
+    left: -30px;
+    top: 10px;
+    font-size: 16px;
+    color: #ff2d75;
+}
+
+/* Textarea */
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    background-color: #1a1a1a;
+    color: white;
+    border: 1px solid #333;
+    resize: none;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* Button */
+button {
+    margin-top: 12px;
+    padding: 12px 24px;
+    background: linear-gradient(145deg, #ff2d75, #ff6ea2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(255, 45, 117, 0.6);
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(145deg, #ff3d80, #ff7eb0);
+    box-shadow: 0 0 16px rgba(255, 45, 117, 0.8);
+}
+
+/* User tags or badges */
+.user-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #222;
+    border: 1px solid #ff2d75;
+    color: #ff6ea2;
+    border-radius: 20px;
+    font-size: 11px;
+    margin-left: 8px;
+    text-transform: uppercase;
+}
+
+/* Upvote/downvote & controls (optional placeholders) */
+.controls {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #ccc;
+    margin-top: 10px;
+}
+.controls span {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.controls span:hover {
+    color: #ff2d75;
+}
+
+/* Avatars */
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #ff2d75;
+    margin-right: 10px;
+    vertical-align: middle;
+}

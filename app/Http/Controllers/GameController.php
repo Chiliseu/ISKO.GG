@@ -118,7 +118,7 @@ class GameController extends Controller
                             $videoId = $item['id']['videoId'] ?? null;
                             if ($videoId) {
                                 $trailer = "https://www.youtube.com/embed/{$videoId}";
-                                break 2; // Break out of both foreach loops
+                                break 2;
                             }
                         }
                     }
@@ -134,12 +134,69 @@ class GameController extends Controller
                     : 'Unknown',
                 'genres' => $gameGenres,
                 'matchedGenres' => implode(", ", $matchedGenres),
-                'url' => 'https://rawg.io/games/' . $game['slug'],
+                'url' => route('community.details', ['slug' => $game['slug']]),
                 'trailer' => $trailer,
-                'youtubeVideoId' => $videoId // optional, only set if YouTube is used
+                'youtubeVideoId' => $videoId
             ];
         }, $data['results']);
 
         return response()->json(["games" => $games]);
+    }
+
+    public function searchGames(Request $request)
+    {
+        $query = $request->input('q');
+        $apiKey = env('RAWG_API_KEY');
+
+        if (!$query) {
+            return response()->json([]);
+        }
+
+        $response = Http::get('https://api.rawg.io/api/games', [
+            'key' => $apiKey,
+            'search' => $query,
+            'page_size' => 10
+        ]);
+
+        if ($response->failed()) {
+            return response()->json([]);
+        }
+
+        $data = $response->json();
+        $games = collect($data['results'])->map(function ($game) {
+            return [
+                'id' => $game['id'],
+                'name' => $game['name'],
+                'image' => $game['background_image'] ?? null,
+                'rating' => $game['rating'] ?? 'N/A',
+                'url' => route('community.details', ['slug' => $game['slug']]),
+            ];
+        });
+
+        return response()->json($games);
+    }
+
+    // Community page without specific game
+    public function communityView()
+    {
+        return view('community');
+    }
+
+    // Community page with single game details by slug
+    public function showGameDetails($slug)
+    {
+        $apiKey = env('RAWG_API_KEY');
+
+        $response = Http::get("https://api.rawg.io/api/games/{$slug}", [
+            'key' => $apiKey
+        ]);
+
+        if ($response->failed()) {
+            abort(404, 'Game not found.');
+        }
+
+        $game = $response->json();
+
+        return view('community', ['game' => $game]);
     }
 }

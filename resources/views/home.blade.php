@@ -14,6 +14,14 @@
 </head>
 <body>
 
+    <!-- Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-right">
+            <a href="{{ route('home') }}" class="nav-link">Summarizer & Recommender</a>
+            <a href="{{ route('community') }}" class="nav-link">Go to Community</a>
+        </div>
+    </nav>
+
     <!-- Background Effects -->
     <div class="falling-container"></div>
     <div class="wave-effect"></div>

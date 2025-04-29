@@ -22,6 +22,67 @@ body {
     min-height: 100vh; /* changed height to min-height */
     position: relative;
 }
+/*Navbar*/
+/* Navbar */
+.top-nav {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 30px;
+    position: absolute;
+    top: 0;
+    margin-right: 30px;
+    width: 100%;
+    z-index: 10;
+}
+
+.nav-right {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
+    position: relative;
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    font-size: 30px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #00ffff;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b,
+        #ff00ff, #00ffff, #ff00ff, #d9ff00, #ff1500, #00ff7b
+    );
+    background-size: 300% 100%;
+    background-repeat: repeat;
+    animation: none;
+    bottom: -5px;
+    left: 0;
+    transition: width 0.4s ease;
+}
+
+.nav-link:hover::after {
+    width: 100%;
+    animation: animateLine 3s linear infinite;
+}
+
+/* Rainbow underline animation */
+@keyframes animateLine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+
 
 /* Title Animation (Arcade-style + Moving Gradient) */
 .title {
