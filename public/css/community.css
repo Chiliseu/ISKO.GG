@@ -1,183 +1,340 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Press+Start+2P&display=swap');
-
-/* Body and container */
-body { 
-    font-family: 'Orbitron', sans-serif;
-    background-color: #0a0a0a; 
-    color: #fff; 
-    padding: 2rem; 
+@font-face {
+    font-family: 'IntensaFuente';
+    src: url('/fonts/IntensaFuente.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
 }
 
-.container { 
-    max-width: 900px; 
-    margin: 0 auto; 
-    position: relative;
+/* Background animation */
+body {
+    margin: 0;
+    font-family: 'IntensaFuente', 'Orbitron', sans-serif;
+    background: linear-gradient(120deg, #400101, #101010, #24243e);
+    color: #fff;
+    overflow-x: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    font-size: 45px;
+}
+
+.animated-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(45deg, rgb(255, 0, 0), rgb(254, 136, 0) 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(-45deg, #f0f, rgb(255, 0, 0) 1px, transparent 1px, transparent 20px);
+    opacity: 0.05;
+    z-index: -1;
+    animation: move 20s linear infinite;
+}
+
+@keyframes move {
+    from { background-position: 0 0; }
+    to { background-position: 1000px 1000px; }
+}
+
+/* Animated Title */
+.title {
+    font-size: 4.5rem;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, cyan, magenta, yellow, cyan);
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: moveGradient 3s linear infinite, titleBounce 2s ease-in-out infinite alternate;
+    margin-bottom: 2rem;
+    font-family: 'IntensaFuente', 'Orbitron', sans-serif;
+}
+
+@keyframes moveGradient {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+@keyframes titleBounce {
+    0% { transform: translateY(-10px); }
+    100% { transform: translateY(7px); }
+}
+
+/* Layout and containers */
+.container {
+    max-width: 900px;
+    padding: 2rem;
+    text-align: center;
 }
 
 /* Search box */
 .search-box input {
-    width: 100%;
+    width: 875px;
     padding: 14px;
-    font-size: 14px;
-    border: 2px solid #ff2d75;
+    border: none;
     border-radius: 8px;
-    margin-bottom: 25px;
-    background-color: #121212;
+    font-size: 1.2rem;
+    background-color: rgba(0, 0, 0, 0.7);
     color: #fff;
-    transition: border 0.3s;
-}
-.search-box input:focus {
-    outline: none;
-    border-color: #ff6ea2;
-    box-shadow: 0 0 10px #ff6ea2;
+    box-shadow: 0 0 10px rgb(158, 26, 2);
 }
 
-/* Suggestions dropdown */
 .suggestions {
-    border: 1px solid #ff2d75;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #000;
     position: absolute;
+    top: 105%;
     width: 100%;
-    z-index: 1000;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(255, 45, 117, 0.3);
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgb(158, 26, 2);
+    border-radius: 5px;
+    z-index: 99;
+    font-size: 1rem;
 }
 
 .suggestions div {
-    padding: 12px;
+    padding: 10px;
     cursor: pointer;
-    color: white;
-    background-color: #000;
-    transition: background-color 0.2s;
+    color: #fff;
 }
 
 .suggestions div:hover {
-    background-color: #333;
+    background: rgb(158, 26, 2);
+    color: #ffffff;
 }
 
-/* Game info panel */
+/* Game info section */
 .game-info {
-    margin-bottom: 30px;
-    background-color: #1a1a1a;
-    padding: 25px;
-    border-radius: 16px;
-    border: 2px solid #292929;
-    box-shadow: 0 0 10px rgba(255, 105, 180, 0.2);
-    transition: transform 0.2s;
-}
-.game-info:hover {
-    transform: translateY(-5px);
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgb(158, 26, 2);
+    width: 90vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    font-size: 2.1rem;
 }
 
-/* Star ratings */
-.star-rating {
-    font-size: 22px;
-    cursor: pointer;
-    color: #444;
+.game-info img {
+    border-radius: 10px;
+    margin-top: 1rem;
 }
-.star-rating .filled {
-    color: gold;
+
+.game-detail {
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    color: #f5f5f5;
+}
+
+/* Star rating */
+.star-rating {
+    font-size: 4.5rem;
+    margin-top: 1rem;
+    color: #888;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.star-rating .star {
+    transition: color 0.2s ease, transform 0.2s ease;
+    color: #888;
+    font-size: 4.5rem;
+}
+
+.star-rating .star:hover,
+.star-rating .star:hover ~ .star {
+    color: #ff0;
+    text-shadow: 0 0 10px #ff0;
+    transform: scale(1.2);
+}
+
+.star-rating .star.filled {
+    color: #ff0;
+    text-shadow: 0 0 10px #ff0;
+}
+
+.star-rating .star.filled-5 {
+    color: transparent;
+    background: linear-gradient(90deg, cyan, magenta, yellow, cyan, cyan, magenta, yellow, cyan);
+    background-size: 400% 100%;
+    background-position: 100% 50%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: moveGradient 3s linear infinite, shake 0.5s ease-in-out infinite;
+    text-shadow: 0 0 10px cyan, 0 0 20px magenta, 0 0 30px yellow, 0 0 40px cyan;
+}
+
+@keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(10deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-10deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Comment box */
+.write-comment {
+    margin-top: 2rem;
+}
+
+.write-comment textarea {
+    width: 1650px;
+    padding: 12px;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 2px solid rgb(158, 26, 2);
+    resize: none;
+    margin: 10px 0;
+    font-size: 1.1rem;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: 1px solid #0ff;
+    font-size: 1.1rem;
+}
+
+textarea:focus {
+    border-color: #0ff;
+    box-shadow: 0 0 10px #0ff;
+    outline: none;
+}
+
+button {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: #0ff;
+    border: none;
+    padding: 12px 24px;
+    color: #000;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: 0 0 10px #0ff;
+    transition: transform 0.2s ease-in-out;
+}
+
+button:hover {
+    background: #ff0;
+    box-shadow: 0 0 15px #ff0;
+    transform: scale(1.05);
 }
 
 /* Comments section */
-.comments-section {
-    margin-top: 40px;
+.comments-section .comment {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 2.5rem;
+    box-shadow: 0 0 10px rgb(158, 26, 2);
+    transition: all 0.3s ease;
 }
 
-/* Individual comment card */
-.comment {
-    background-color: #181818;
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    border-left: 4px solid #ff2d75;
-    box-shadow: 0 2px 8px rgba(255, 45, 117, 0.1);
-    position: relative;
+.comments-section .comment:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgb(158, 26, 2);
 }
-.comment small {
-    color: #aaa;
-    font-size: 11px;
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #0ff;
+    transition: transform 0.3s ease;
+}
+
+.avatar:hover {
+    transform: scale(1.1);
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 2rem;
+}
+
+.comment-username {
+    font-size: 2.2rem;
+    color: #fff;
+    transition: text-shadow 0.3s ease;
+    margin-top: 10px;
+}
+
+.comment-username:hover {
+    text-shadow: 0 0 10px #0ff;
+}
+
+.user-badge {
+    background-color: #444;
+    color: #ffd700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 2.0rem;
+    transition: transform 0.3s ease;
+    margin-top: 10px;
+}
+
+.user-badge:hover {
+    transform: scale(1.1);
+}
+
+.comment-text {
+    font-size: 3.5rem;
+    color: #ddd;
+    margin-top: 5px;
+}
+
+.comment-time {
+    font-size: 1.5rem;
+    color: #888;
     display: block;
+    margin-top: 4px;
+}
+
+.controls {
+    font-size: 3.5rem;
+    color: #aaa;
+    display: flex;
+    gap: 12px;
     margin-top: 6px;
 }
-.comment::before {
-    content: "🗨️";
-    position: absolute;
-    left: -30px;
-    top: 10px;
-    font-size: 16px;
-    color: #ff2d75;
-}
 
-/* Textarea */
-textarea {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 10px;
-    background-color: #1a1a1a;
-    color: white;
-    border: 1px solid #333;
-    resize: none;
-    font-family: 'Orbitron', sans-serif;
-}
-
-/* Button */
-button {
-    margin-top: 12px;
-    padding: 12px 24px;
-    background: linear-gradient(145deg, #ff2d75, #ff6ea2);
-    color: white;
-    border: none;
-    border-radius: 8px;
+.controls .vote,
+.controls .reply {
+    background-color: #222;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s, font-size 0.3s;
     cursor: pointer;
-    box-shadow: 0 0 12px rgba(255, 45, 117, 0.6);
-    transition: all 0.3s ease;
-    font-weight: bold;
-}
-button:hover {
-    transform: scale(1.05);
-    background: linear-gradient(145deg, #ff3d80, #ff7eb0);
-    box-shadow: 0 0 16px rgba(255, 45, 117, 0.8);
+    font-size: 2.2rem;
 }
 
-/* User tags or badges */
-.user-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #222;
-    border: 1px solid #ff2d75;
-    color: #ff6ea2;
-    border-radius: 20px;
-    font-size: 11px;
-    margin-left: 8px;
-    text-transform: uppercase;
+.controls .vote:hover,
+.controls .reply:hover {
+    background-color: #333;
+    color: #fff;
+    text-shadow: 0 0 4px #0ff;
+    font-size: 2.0rem;
 }
 
-/* Upvote/downvote & controls (optional placeholders) */
-.controls {
-    display: flex;
-    gap: 15px;
-    font-size: 14px;
-    color: #ccc;
-    margin-top: 10px;
-}
 .controls span {
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.controls span:hover {
-    color: #ff2d75;
-}
-
-/* Avatars */
-.avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid #ff2d75;
     margin-right: 10px;
-    vertical-align: middle;
+    cursor: pointer;
+    font-size: 1rem;
 }
