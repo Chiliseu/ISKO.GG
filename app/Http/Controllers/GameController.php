@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class GameController extends Controller
         $apiKey = env('RAWG_API_KEY');
         $youtubeApiKey = env('YOUTUBE_API_KEY');
 
-        // Fetch available genres from RAWG API
+        // Fetch genres
         $genresResponse = Http::get("https://api.rawg.io/api/genres", [
             'key' => $apiKey
         ]);
@@ -31,7 +32,7 @@ class GameController extends Controller
         if ($genresResponse->failed()) {
             return response()->json([
                 "games" => [
-                    ["name" => "Failed to fetch available genres."]
+                    ["name" => "Failed to fetch genres."]
                 ]
             ]);
         }
@@ -39,7 +40,7 @@ class GameController extends Controller
         $genresData = $genresResponse->json();
         $availableGenres = array_map(fn($genre) => strtolower($genre['name']), $genresData['results']);
 
-        // Search for games
+        // Search games
         $response = Http::get("https://api.rawg.io/api/games", [
             'key' => $apiKey,
             'search' => $input,
@@ -57,6 +58,24 @@ class GameController extends Controller
         }
 
         $games = array_map(function ($game) use ($availableGenres, $apiKey, $youtubeApiKey) {
+            $slug = $game['slug'];
+
+            // Check if the game already exists
+            $existing = Game::where('slug', $slug)->first();
+            if ($existing) {
+                return [
+                    'name' => $existing->name,
+                    'image' => $existing->image,
+                    'rating' => $existing->rating,
+                    'platforms' => $existing->platforms,
+                    'genres' => $existing->genres,
+                    'matchedGenres' => $existing->matched_genres,
+                    'url' => route('community.details', ['slug' => $existing->slug]),
+                    'trailer' => $existing->trailer_url,
+                    'youtubeVideoId' => $existing->youtube_video_id,
+                ];
+            }
+
             $gameGenres = isset($game['genres']) 
                 ? implode(", ", array_map(fn($g) => $g['name'], $game['genres']))
                 : 'Unknown';
@@ -68,29 +87,26 @@ class GameController extends Controller
             $trailer = null;
             $videoId = null;
 
-            // Try to get RAWG trailer
-            if (isset($game['slug'])) {
-                $trailerResponse = Http::get("https://api.rawg.io/api/games/{$game['slug']}/movies", [
-                    'key' => $apiKey
-                ]);
+            // Try RAWG trailer
+            $trailerResponse = Http::get("https://api.rawg.io/api/games/{$slug}/movies", [
+                'key' => $apiKey
+            ]);
 
-                if ($trailerResponse->successful()) {
-                    $videos = $trailerResponse->json()['results'] ?? [];
-
-                    foreach ($videos as $video) {
-                        if (stripos($video['name'], 'trailer') !== false && isset($video['data']['max'])) {
-                            $trailer = $video['data']['max'];
-                            break;
-                        }
+            if ($trailerResponse->successful()) {
+                $videos = $trailerResponse->json()['results'] ?? [];
+                foreach ($videos as $video) {
+                    if (stripos($video['name'], 'trailer') !== false && isset($video['data']['max'])) {
+                        $trailer = $video['data']['max'];
+                        break;
                     }
+                }
 
-                    if (!$trailer && !empty($videos)) {
-                        $trailer = $videos[0]['data']['max'] ?? null;
-                    }
+                if (!$trailer && !empty($videos)) {
+                    $trailer = $videos[0]['data']['max'] ?? null;
                 }
             }
 
-            // Fallback to YouTube embed
+            // Fallback to YouTube
             if (!$trailer) {
                 $searchQueries = [
                     $game['name'] . ' official trailer gameplay',
@@ -111,9 +127,6 @@ class GameController extends Controller
 
                     if ($youtubeResponse->successful()) {
                         $youtubeData = $youtubeResponse->json();
-                        Log::info("YouTube Search Query: " . $query);
-                        Log::info("YouTube Response: ", $youtubeData);
-
                         foreach ($youtubeData['items'] as $item) {
                             $videoId = $item['id']['videoId'] ?? null;
                             if ($videoId) {
@@ -125,7 +138,9 @@ class GameController extends Controller
                 }
             }
 
-            return [
+            // Save to DB
+            $newGame = Game::create([
+                'slug' => $slug,
                 'name' => $game['name'],
                 'image' => $game['background_image'] ?? null,
                 'rating' => $game['rating'] ?? 'N/A',
@@ -133,10 +148,21 @@ class GameController extends Controller
                     ? implode(", ", array_map(fn($p) => $p['platform']['name'], $game['platforms'])) 
                     : 'Unknown',
                 'genres' => $gameGenres,
-                'matchedGenres' => implode(", ", $matchedGenres),
-                'url' => route('community.details', ['slug' => $game['slug']]),
-                'trailer' => $trailer,
-                'youtubeVideoId' => $videoId
+                'matched_genres' => implode(", ", $matchedGenres),
+                'trailer_url' => $trailer,
+                'youtube_video_id' => $videoId
+            ]);
+
+            return [
+                'name' => $newGame->name,
+                'image' => $newGame->image,
+                'rating' => $newGame->rating,
+                'platforms' => $newGame->platforms,
+                'genres' => $newGame->genres,
+                'matchedGenres' => $newGame->matched_genres,
+                'url' => route('community.details', ['slug' => $newGame->slug]),
+                'trailer' => $newGame->trailer_url,
+                'youtubeVideoId' => $newGame->youtube_video_id,
             ];
         }, $data['results']);
 
@@ -148,9 +174,7 @@ class GameController extends Controller
         $query = $request->input('q');
         $apiKey = env('RAWG_API_KEY');
 
-        if (!$query) {
-            return response()->json([]);
-        }
+        if (!$query) return response()->json([]);
 
         $response = Http::get('https://api.rawg.io/api/games', [
             'key' => $apiKey,
@@ -158,9 +182,7 @@ class GameController extends Controller
             'page_size' => 10
         ]);
 
-        if ($response->failed()) {
-            return response()->json([]);
-        }
+        if ($response->failed()) return response()->json([]);
 
         $data = $response->json();
         $games = collect($data['results'])->map(function ($game) {
@@ -176,26 +198,18 @@ class GameController extends Controller
         return response()->json($games);
     }
 
-    // Community page without specific game
     public function communityView()
     {
         return view('community');
     }
 
-    // Community page with single game details by slug
     public function showGameDetails($slug)
     {
-        $apiKey = env('RAWG_API_KEY');
+        $game = Game::where('slug', $slug)->first();
 
-        $response = Http::get("https://api.rawg.io/api/games/{$slug}", [
-            'key' => $apiKey
-        ]);
-
-        if ($response->failed()) {
+        if (!$game) {
             abort(404, 'Game not found.');
         }
-
-        $game = $response->json();
 
         return view('community', ['game' => $game]);
     }
