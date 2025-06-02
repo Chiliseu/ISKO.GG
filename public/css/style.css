@@ -195,21 +195,65 @@ input::placeholder {
 }
 
 .button {
-    background: rgb(45, 136, 51);
-    padding: 12px 20px;
-    border: none;
-    color: white;
-    font-size: 24px;
-    font-family: 'IntensaFuente', sans-serif;
-    text-transform: uppercase;
-    cursor: pointer;
-    border-radius: 5px;
-    font-weight: bold;
+  position: relative;
+  display: inline-block;
+  padding: 12px 48px;
+  font-family: 'Pixel', 'IntensaFuente', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #fff;
+  background: #00cc00; /* vibrant green */
+  
+  border: 4px solid #fff;
+  outline: 3px solid #000;
+  outline-offset: -4px;
+  
+  box-shadow:
+    6px 6px 0 #000,
+    5px 5px 0 #009900, /* darker green shadow */
+    inset 0 8px 0 #33ff33; /* light green highlight */
+  
+  transition: none;
+  cursor: pointer;
+  user-select: none;
+  image-rendering: pixelated;
+  text-shadow:
+    1px 1px 0 #000;
+}
+
+.button::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 
 .button:hover {
-    background: #45a049;
+  background: #ffff00; /* bright yellow */
+  
+  box-shadow:
+    3px 3px 0 #000,
+    2px 2px 0 #999900, /* darker yellow shadow */
+    inset 0 8px 0 #ffff33; /* light yellow highlight */
+  outline-offset: -2px;
+  transform: translate(2px, 2px);
 }
+
+.button:active {
+  background: #ffff00;
+  box-shadow: none;
+  outline-offset: 0;
+  transform: translate(6px, 6px);
+}
+
 
 /* Music Toggle Button */
 .music-toggle {
@@ -235,6 +279,7 @@ input::placeholder {
 /* Robot Game Fact Box */
 .robot-fact-box {
     position: fixed;
+    z-index: 9999;
     top: 40px;
     left: 20px;
     width: 300px;
@@ -520,3 +565,30 @@ input::placeholder {
     transition: opacity 0.4s ease;
     z-index: 1;
 }
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px;
+    text-align: center;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px; right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+}
+

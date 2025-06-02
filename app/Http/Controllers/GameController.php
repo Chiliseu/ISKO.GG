@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GameController extends Controller
 {
@@ -70,7 +69,6 @@ class GameController extends Controller
                     'platforms' => $existing->platforms,
                     'genres' => $existing->genres,
                     'matchedGenres' => $existing->matched_genres,
-                    'url' => route('community.details', ['slug' => $existing->slug]),
                     'trailer' => $existing->trailer_url,
                     'youtubeVideoId' => $existing->youtube_video_id,
                 ];
@@ -160,7 +158,6 @@ class GameController extends Controller
                 'platforms' => $newGame->platforms,
                 'genres' => $newGame->genres,
                 'matchedGenres' => $newGame->matched_genres,
-                'url' => route('community.details', ['slug' => $newGame->slug]),
                 'trailer' => $newGame->trailer_url,
                 'youtubeVideoId' => $newGame->youtube_video_id,
             ];
@@ -191,26 +188,10 @@ class GameController extends Controller
                 'name' => $game['name'],
                 'image' => $game['background_image'] ?? null,
                 'rating' => $game['rating'] ?? 'N/A',
-                'url' => route('community.details', ['slug' => $game['slug']]),
+                'slug' => $game['slug']
             ];
         });
 
         return response()->json($games);
-    }
-
-    public function communityView()
-    {
-        return view('community');
-    }
-
-    public function showGameDetails($slug)
-    {
-        $game = Game::where('slug', $slug)->first();
-
-        if (!$game) {
-            abort(404, 'Game not found.');
-        }
-
-        return view('community', ['game' => $game]);
     }
 }

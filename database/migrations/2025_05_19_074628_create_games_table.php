@@ -29,6 +29,18 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('games');
+        Schema::table('games', function (Blueprint $table) {
+            $table->dropColumn([
+                'slug',
+                'name',
+                'image',
+                'rating',
+                'platforms',
+                'genres',
+                'matched_genres',
+                'trailer_url',
+                'youtube_video_id'
+            ]);
+        });
     }
 };
