@@ -578,11 +578,15 @@ input::placeholder {
 
 .modal-content {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 600px;
+    padding: 40px; /* Increased padding */
+    border-radius: 16px;
+    max-width: 900px; /* Increased max-width */
+    width: 90%;       /* Responsive width */
+    min-height: 300px; /* Optional: minimum height */
     text-align: center;
     position: relative;
+    color: #222;
+    font-size: 2rem;  /* Larger text */
 }
 
 .close-button {

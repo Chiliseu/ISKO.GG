@@ -10,8 +10,15 @@ class GameSummary extends Model
     use HasFactory;
 
     protected $fillable = [
-        'game_slug',
+        'user_input',
         'summary',
-        'image_url',
     ];
+
+    /**
+     * Always store user_input in lowercase.
+     */
+    public function setUserInputAttribute($value)
+    {
+        $this->attributes['user_input'] = strtolower(trim($value));
+    }
 }
