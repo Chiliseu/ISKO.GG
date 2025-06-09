@@ -596,3 +596,45 @@ input::placeholder {
     cursor: pointer;
 }
 
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.loading-gif {
+    width: 100px;
+    height: 100px;
+}
+
+.loading-text {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    animation: waveColors 2s infinite, waveMotion 1.5s infinite ease-in-out;
+}
+
+/* Rainbow color animation */
+@keyframes waveColors {
+    0% { color: red; }
+    20% { color: orange; }
+    40% { color: yellow; }
+    60% { color: green; }
+    80% { color: blue; }
+    100% { color: violet; }
+}
+
+/* Waving motion */
+@keyframes waveMotion {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+

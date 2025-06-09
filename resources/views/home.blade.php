@@ -11,6 +11,7 @@
 
     <!-- Font Awesome -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 </head>
 <body>
 
@@ -55,12 +56,18 @@
         <button id="scroll-right" class="scroll-btn" aria-label="Scroll right">▶</button>
     </div>
 
-    <!-- Summary Modal (Updated, No Image) -->
+    <!-- Summary Modal -->
     <div id="summary-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="close-summary">&times;</span>
             <p id="summary-text"></p>
         </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-overlay">
+        <img src="{{ asset('images/loading.gif') }}" alt="Loading..." class="loading-gif">
+        <div class="loading-text">Loading...</div>
     </div>
 
     <!-- Script -->
@@ -72,6 +79,7 @@
             const recommendationContainer = document.getElementById("recommendation-container");
             const scrollLeft = document.getElementById("scroll-left");
             const scrollRight = document.getElementById("scroll-right");
+            const spinner = document.getElementById("loading-spinner");
             let isPlaying = true;
 
             musicToggle.addEventListener("click", () => {
@@ -80,7 +88,6 @@
                 isPlaying = !isPlaying;
             });
 
-            // Falling shapes
             let lastShapeTime = Date.now();
             let shapes = new Map();
 
@@ -105,13 +112,11 @@
 
             function updateShapes() {
                 const currentTime = Date.now();
-                const container = document.querySelector('.falling-container');
                 const waveContainer = document.querySelector('.wave-effect');
 
                 shapes.forEach((data, shape) => {
                     const elapsed = (currentTime - data.startTime) / 1000;
                     const newY = elapsed * data.fallSpeed - 50;
-
                     shape.style.top = `${newY}px`;
 
                     if (newY + data.size >= window.innerHeight - 10) {
@@ -144,7 +149,6 @@
 
             updateShapes();
 
-            // Robot Facts
             setInterval(() => {
                 fetch("/random-fact")
                     .then(res => res.json())
@@ -152,7 +156,6 @@
                         document.getElementById("game-fact").innerText = data.fact;
                         document.getElementById("robot-image").src = data.image;
                         document.getElementById("robot-fact-box").classList.add("show-fact");
-
                         setTimeout(() => {
                             document.getElementById("robot-fact-box").classList.remove("show-fact");
                         }, 5000);
@@ -174,12 +177,14 @@
                 return document.querySelector('meta[name="csrf-token"]').getAttribute('content') || '';
             }
 
-            // Recommend Button
+            // RECOMMEND BUTTON
             recommendButton.addEventListener("click", () => {
                 const input = document.getElementById("game-input").value.trim();
                 const csrfToken = getCsrfToken();
                 if (!input) return alert("Please enter a game before requesting recommendations.");
                 if (!csrfToken) return alert("CSRF Token missing. Try refreshing the page.");
+
+                spinner.style.display = "flex";
 
                 fetch("{{ route('get.recommendation') }}", {
                     method: "POST",
@@ -191,7 +196,9 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    spinner.style.display = "none";
                     recommendationContainer.innerHTML = "";
+
                     const games = data.games;
                     if (games.length === 0 || games[0].name.includes("No recommendations")) {
                         recommendationContainer.innerHTML = "<p>No recommendations found. Try a different keyword!</p>";
@@ -244,7 +251,10 @@
                         scrollRight.style.display = overflow ? "block" : "none";
                     }, 100);
                 })
-                .catch(() => alert("An error occurred. Please try again later."));
+                .catch(() => {
+                    spinner.style.display = "none";
+                    alert("An error occurred. Please try again later.");
+                });
             });
 
             scrollLeft.addEventListener("click", () => {
@@ -263,7 +273,7 @@
                 }
             });
 
-            // Summarize Button (Updated)
+            // SUMMARIZE BUTTON
             document.getElementById("summarize-button").addEventListener("click", () => {
                 const input = document.getElementById("game-input").value.trim();
                 const csrfToken = getCsrfToken();
@@ -272,6 +282,8 @@
                     alert("Please enter a game to summarize.");
                     return;
                 }
+
+                spinner.style.display = "flex";
 
                 fetch("{{ route('summarize') }}", {
                     method: "POST",
@@ -283,6 +295,8 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    spinner.style.display = "none";
+
                     if (data.error) {
                         alert(data.error);
                         return;
@@ -291,7 +305,10 @@
                     document.getElementById("summary-text").textContent = data.summary || "No summary available.";
                     document.getElementById("summary-modal").style.display = "flex";
                 })
-                .catch(() => alert("Something went wrong while fetching the summary."));
+                .catch(() => {
+                    spinner.style.display = "none";
+                    alert("Something went wrong while fetching the summary.");
+                });
             });
 
             document.getElementById("close-summary").addEventListener("click", () => {
