@@ -9,15 +9,25 @@ class GameFactController extends Controller
 {
     public function random()
     {
-        $fact = DB::table('game_facts')->inRandomOrder()->first();
+        \Log::info('GameFactController@random called.');
 
-        if (!$fact) {
-            return response()->json(['error' => 'No facts found.'], 404);
+        try {
+            $fact = DB::table('game_facts')->inRandomOrder()->first();
+            \Log::info('DB query executed.', ['fact' => $fact]);
+
+            if (!$fact) {
+                \Log::error('No facts found in game_facts table.');
+                return response()->json(['error' => 'No facts found.'], 404);
+            }
+
+            \Log::info('Returning fact and image.', ['fact' => $fact->fact, 'image' => $fact->image_path]);
+            return response()->json([
+                'fact' => $fact->fact,
+                'image' => asset($fact->image_path),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Exception in GameFactController@random', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Server error.'], 500);
         }
-
-        return response()->json([
-            'fact' => $fact->fact, // correct column
-            'image' => asset($fact->image_path),
-        ]);
     }
 }
