@@ -13,12 +13,13 @@ class GameSummaryController extends Controller
         \Log::info('Summarize endpoint called.', ['request' => $request->all()]);
 
         $gameInput = strtolower(trim($request->input('game')));
+        \Log::info('User input:', ['game' => $gameInput]);
+
         if (!$gameInput) {
             \Log::warning('No game provided.');
             return response()->json(['error' => 'No game provided.'], 400);
         }
 
-        // Check DB
         $existing = GameSummary::where('user_input', $gameInput)->first();
         if ($existing) {
             \Log::info('Found existing summary in DB.', ['summary' => $existing]);
@@ -33,31 +34,49 @@ class GameSummaryController extends Controller
             return response()->json(['error' => 'API keys not configured.'], 500);
         }
 
-        // Fetch RAWG data
+        // Try to match a game from RAWG
         $rawgData = cache()->remember("rawg_game_" . md5($gameInput), 86400, function () use ($rawgKey, $gameInput) {
             $response = Http::get("https://api.rawg.io/api/games", [
                 'key' => $rawgKey,
                 'search' => $gameInput,
                 'page_size' => 1
             ]);
-
-            \Log::info('RAWG API response', ['status' => $response->status()]);
-            if ($response->successful()) {
-                return $response->json()['results'][0] ?? null;
-            }
-            return null;
+            return $response->successful() ? ($response->json()['results'][0] ?? null) : null;
         });
 
-        // Build prompt
+        $prompt = '';
+
         if ($rawgData) {
             $gameName = $rawgData['name'];
-            $genres = implode(", ", array_map(fn($g) => $g['name'], $rawgData['genres'] ?? []));
-            $platforms = implode(", ", array_map(fn($p) => $p['platform']['name'], $rawgData['platforms'] ?? []));
-            $released = $rawgData['released'] ?? 'unknown date';
+            \Log::info('Game matched from RAWG.', ['gameName' => $gameName]);
 
-            $prompt = "You're an expert gamer who summarizes video games. Summarize \"$gameName\" (released on $released for $platforms, genres: $genres). Write an engaging, fun lore/gameplay summary in <150 words.";
+            // Check if input mentions more than just the game
+            if (!preg_match("/\b" . preg_quote(strtolower($gameName), '/') . "\b/", $gameInput)) {
+                $prompt = <<<PROMPT
+You're a professional gaming expert. The user asked:
+"{$gameInput}"
+
+If this relates to a character, lore, or specific element of the game "{$gameName}", provide a fun, compact summary (under 150 words) focusing on that. Include key connections to the game world.
+
+If the input doesn't relate to gaming, politely say:
+"I'm a gamer expert and I only summarize actual video games and their content."
+PROMPT;
+            } else {
+                $prompt = <<<PROMPT
+You're a professional gaming expert. Write a fun, engaging, compact summary (under 150 words) of the game "{$gameName}". Include lore, main characters, and gameplay elements.
+PROMPT;
+            }
         } else {
-            $prompt = "You're an expert gamer who *only* summarizes video games. If the title \"$gameInput\" sounds like a game, confidently summarize it. If it doesn't sound like a game, politely say you only summarize games.";
+            \Log::warning('No RAWG match found.');
+            $prompt = <<<PROMPT
+You're a professional gaming expert. The user asked:
+"{$gameInput}"
+
+If this is about a video game or a character in a game, provide a concise (under 150 words) lore/gameplay summary.
+
+If it's unrelated to gaming, politely say:
+"I'm a gamer expert and I only summarize actual video games and their content."
+PROMPT;
         }
 
         \Log::info('Prompt prepared.', ['prompt' => $prompt]);
@@ -67,33 +86,33 @@ class GameSummaryController extends Controller
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
                 "messages" => [
-                    ["role" => "system", "content" => "You're a professional gamer who writes fun, confident summaries. Never make up summaries of non-games."],
+                    ["role" => "system", "content" => "You are a gaming expert summarizer. Do not make up facts. If input isn't about games, politely decline."],
                     ["role" => "user", "content" => $prompt]
                 ],
                 "temperature" => 0.7,
                 "max_tokens" => 300
             ]);
 
-        \Log::info('OpenAI API response', ['status' => $chatResponse->status()]);
-
         if ($chatResponse->failed()) {
-            \Log::error('Failed to fetch summary from OpenAI.', ['body' => $chatResponse->body()]);
-            return response()->json(['error' => 'Failed to fetch summary from OpenAI.'], 500);
+            \Log::error('OpenAI request failed.', ['status' => $chatResponse->status(), 'body' => $chatResponse->body()]);
+            return response()->json(['error' => 'Failed to get summary from AI.'], 500);
         }
 
-        $content = $chatResponse->json()['choices'][0]['message']['content'] ?? null;
-        if (!$content) {
-            \Log::error('Invalid response from OpenAI.', ['response' => $chatResponse->json()]);
-            return response()->json(['error' => 'Invalid response from OpenAI.'], 500);
+        $responseData = $chatResponse->json();
+
+        if (!isset($responseData['choices'][0]['message']['content'])) {
+            \Log::error('OpenAI invalid response.', ['responseData' => $responseData]);
+            return response()->json(['error' => 'Invalid AI response.'], 500);
         }
 
-        // Save
-        $saved = GameSummary::updateOrCreate(
-            ['user_input' => $gameInput],
-            ['summary' => $content]
-        );
+        $summary = $responseData['choices'][0]['message']['content'];
+        \Log::info('Summary generated.', ['summary' => $summary]);
 
-        \Log::info('Summary saved.', ['saved' => $saved]);
+        // Save to DB
+        $saved = GameSummary::create([
+            'user_input' => $gameInput,
+            'summary' => $summary
+        ]);
 
         return response()->json($saved);
     }
