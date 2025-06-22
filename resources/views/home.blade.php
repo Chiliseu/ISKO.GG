@@ -57,12 +57,13 @@
     </div>
 
     <!-- Summary Modal -->
-    <div id="summary-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-summary">&times;</span>
-            <p id="summary-text"></p>
+        <div id="summary-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-summary">&times;</span>
+                <div id="summary-text"></div> <!-- Change <p> to <div> for flexibility -->
+            </div>
         </div>
-    </div>
+
 
     <!-- Loading Spinner -->
     <div id="loading-spinner" class="loading-overlay">
