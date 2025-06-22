@@ -570,10 +570,7 @@ input::placeholder {
     display: none;
     position: fixed;
     z-index: 999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
+    left: 0; top: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.8);
     justify-content: center;
     align-items: center;
@@ -581,34 +578,21 @@ input::placeholder {
 
 .modal-content {
     background: white;
-    padding: 20px; /* 🔹Reduced padding to fit more content */
+    padding: 40px; /* Increased padding */
     border-radius: 16px;
-    max-width: 900px;
-    width: 90%;
-    max-height: 80vh; /* 🔹Limit height to 80% of viewport */
-    overflow-y: auto; /* 🔹Enable scroll if content exceeds height */
-    text-align: left; /* 🔹Better readability */
+    max-width: 900px; /* Increased max-width */
+    width: 90%;       /* Responsive width */
+    min-height: 300px; /* Optional: minimum height */
+    text-align: center;
     position: relative;
     color: #222;
-    font-size: 1.2rem; /* 🔹Reasonable font size for long text */
-}
-
-.modal-content::-webkit-scrollbar {
-    width: 8px;
-}
-.modal-content::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-}
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    font-size: 2rem;  /* Larger text */
 }
 
 .close-button {
     position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 2rem;
+    top: 10px; right: 20px;
+    font-size: 24px;
     cursor: pointer;
 }
 

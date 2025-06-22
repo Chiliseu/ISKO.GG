@@ -12,8 +12,7 @@ class GameSummaryController extends Controller
     {
         \Log::info('Summarize endpoint called.', ['request' => $request->all()]);
 
-        $gameInputRaw = $request->input('game');
-        $gameInput = strtolower(trim($gameInputRaw));
+        $gameInput = strtolower(trim($request->input('game')));
         \Log::info('User input:', ['game' => $gameInput]);
 
         if (!$gameInput) {
@@ -35,7 +34,7 @@ class GameSummaryController extends Controller
             return response()->json(['error' => 'API keys not configured.'], 500);
         }
 
-        // Try to match game in RAWG
+        // Try to match a game from RAWG
         $rawgData = cache()->remember("rawg_game_" . md5($gameInput), 86400, function () use ($rawgKey, $gameInput) {
             $response = Http::get("https://api.rawg.io/api/games", [
                 'key' => $rawgKey,
@@ -45,12 +44,9 @@ class GameSummaryController extends Controller
             return $response->successful() ? ($response->json()['results'][0] ?? null) : null;
         });
 
-        $gameName = $rawgData['name'] ?? null;
+        $gameName = $rawgData ? $rawgData['name'] : null;
 
-        $wantsDeepDive = preg_match('/deep|detailed|in-depth|explain fully|long|lore/i', $gameInputRaw);
-        $maxTokens = $wantsDeepDive ? 800 : 300;
-
-        // Build the Ultimate Game Master prompt
+        // Compose the ultimate game master prompt
         $summaryPrompt = <<<PROMPT
 You are the Ultimate Game Master AI — a passionate, friendly, and deeply knowledgeable gaming expert. 
 You help players with accurate lore, character analysis, gameplay tips, and game culture insights. 
@@ -63,7 +59,7 @@ TASKS:
   * Mention their significance in the game universe and fanbase.
 
 - If asked about a **game’s story or lore**:
-  * Provide a clear, spoiler-aware summary of the plot.
+  * Provide a clear, spoiler-aware (or spoiler-light) summary of the plot.
   * Include world-building details, factions, locations, or major conflicts.
   * Share what makes the game’s story unique or beloved.
 
@@ -96,27 +92,26 @@ TASKS:
 
 RULES:
 - Be accurate. Never invent facts.
+- Be concise: Max 150-200 words per answer.
 - Be friendly and excited, like a gamer sharing with friends.
+
+USER INPUT:
+"{$gameInput}"
+
 PROMPT;
 
-        // Add user input and optional game match
-        $summaryPrompt .= "\n\nUser input: \"{$gameInputRaw}\"";
-        if ($gameName) {
-            $summaryPrompt .= "\n(Note: The game detected is \"{$gameName}\" — include its details if relevant.)";
-        }
-
-        \Log::info('Prompt prepared.', ['prompt' => $summaryPrompt, 'maxTokens' => $maxTokens]);
+        \Log::info('Prompt prepared.', ['prompt' => $summaryPrompt]);
 
         // Call OpenAI API
         $chatResponse = Http::withToken($openaiKey)
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
                 "messages" => [
-                    ["role" => "system", "content" => "You are the Ultimate Game Master AI. Never make up facts. Focus only on video games."],
+                    ["role" => "system", "content" => "You are the Ultimate Game Master AI, follow the prompt strictly and do not make up facts."],
                     ["role" => "user", "content" => $summaryPrompt]
                 ],
                 "temperature" => 0.7,
-                "max_tokens" => $maxTokens
+                "max_tokens" => 300
             ]);
 
         if ($chatResponse->failed()) {
