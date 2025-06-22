@@ -581,7 +581,7 @@ input::placeholder {
 }
 
 .modal-content {
-    background-color: #fff;
+    background-color: #000000;
     padding: 20px;
     border-radius: 10px;
     max-width: 600px;
