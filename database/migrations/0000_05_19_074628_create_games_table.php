@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('games', function (Blueprint $table) {
-            $table->string('slug')->unique()->after('id');
-            $table->string('name')->after('slug');
-            $table->text('image')->nullable()->after('name');
-            $table->string('rating')->nullable()->after('image');
-            $table->text('platforms')->nullable()->after('rating');
-            $table->text('genres')->nullable()->after('platforms');
-            $table->text('matched_genres')->nullable()->after('genres');
-            $table->text('trailer_url')->nullable()->after('matched_genres');
-            $table->string('youtube_video_id')->nullable()->after('trailer_url');
+        Schema::create('games', function (Blueprint $table) {
+            $table->id();
+            $table->string('slug')->unique();
+            $table->string('name');
+            $table->text('image')->nullable();
+            $table->string('rating')->nullable();
+            $table->text('platforms')->nullable();
+            $table->text('genres')->nullable();
+            $table->text('matched_genres')->nullable();
+            $table->text('trailer_url')->nullable();
+            $table->string('youtube_video_id')->nullable();
+            $table->timestamps();
         });
     }
 
