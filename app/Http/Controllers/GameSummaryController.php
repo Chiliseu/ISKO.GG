@@ -20,6 +20,7 @@ class GameSummaryController extends Controller
             return response()->json(['error' => 'No game provided.'], 400);
         }
 
+        // Check if summary already exists
         $existing = GameSummary::where('user_input', $game)->first();
         if ($existing) {
             \Log::info('Found existing summary in DB.', ['summary' => $existing]);
@@ -28,36 +29,49 @@ class GameSummaryController extends Controller
 
         $chatApiKey = env('OPENAI_API_KEY');
         $rawgApiKey = env('RAWG_API_KEY');
-        \Log::info('API keys loaded.', ['openai' => $chatApiKey ? 'set' : 'missing', 'rawg' => $rawgApiKey ? 'set' : 'missing']);
 
         if (!$chatApiKey || !$rawgApiKey) {
             \Log::error('API keys not configured.');
             return response()->json(['error' => 'API keys not configured.'], 500);
         }
 
-        // Fetch game details from RAWG API
-        $gameDataResponse = Http::get("https://api.rawg.io/api/games", [
-            'key' => $rawgApiKey,
-            'search' => $game,
-            'page_size' => 1
-        ]);
-        \Log::info('RAWG API response', ['status' => $gameDataResponse->status(), 'body' => $gameDataResponse->body()]);
+        // Use cached RAWG result if available
+        $gameInfo = cache()->remember("rawg_game_" . md5($game), 86400, function () use ($rawgApiKey, $game) {
+            $response = Http::get("https://api.rawg.io/api/games", [
+                'key' => $rawgApiKey,
+                'search' => $game,
+                'page_size' => 1
+            ]);
 
-        $gameData = $gameDataResponse->json();
+            \Log::info('RAWG API response', ['status' => $response->status(), 'body' => $response->body()]);
+            
+            if ($response->failed()) {
+                return null;
+            }
 
-        if (empty($gameData['results'])) {
+            $results = $response->json()['results'] ?? [];
+            return $results[0] ?? null;
+        });
+
+        if (!$gameInfo) {
             \Log::warning('Game not found in RAWG API.', ['search' => $game]);
             return response()->json(['error' => 'Game not found.'], 404);
         }
 
-        $gameInfo = $gameData['results'][0];
-        $gameName = $gameInfo['name'];
-        \Log::info('Game found.', ['gameName' => $gameName]);
+        // Verify title similarity
+        if (stripos($gameInfo['name'], $game) === false) {
+            \Log::warning('Best match does not closely match input.', ['input' => $game, 'matched' => $gameInfo['name']]);
+            return response()->json(['error' => 'No close match found.'], 404);
+        }
 
-        $summaryPrompt = "Give a concise, fun-to-read lore/gameplay summary of the game \"$gameName\" in less than 150 words.";
+        $gameName = $gameInfo['name'];
+
+        // Improved prompt
+        $summaryPrompt = "You are a professional gaming expert. Provide a concise, engaging lore or gameplay summary for the official video game \"$gameName\" in less than 150 words. If the game does not exist or you have no information about it, say: 'Sorry, I couldn't find details about this game.' Do not make up any facts.";
+
         \Log::info('Summary prompt created.', ['prompt' => $summaryPrompt]);
 
-        // Call OpenAI ChatGPT API
+        // Call OpenAI
         $chatResponse = Http::withToken($chatApiKey)
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
@@ -68,36 +82,30 @@ class GameSummaryController extends Controller
                 "temperature" => 0.7,
                 "max_tokens" => 300
             ]);
+
         \Log::info('OpenAI API response', ['status' => $chatResponse->status(), 'body' => $chatResponse->body()]);
 
         if ($chatResponse->failed()) {
-            \Log::error('Failed to fetch summary from ChatGPT.', ['status' => $chatResponse->status(), 'body' => $chatResponse->body()]);
-            return response()->json([
-                'error' => 'Failed to fetch summary from ChatGPT.',
-                'status' => $chatResponse->status(),
-                'body' => $chatResponse->body()
-            ], 500);
+            \Log::error('Failed to fetch summary from ChatGPT.', ['status' => $chatResponse->status()]);
+            return response()->json(['error' => 'Failed to fetch summary from ChatGPT.'], 500);
         }
 
         $responseData = $chatResponse->json();
-        \Log::info('OpenAI responseData parsed.', ['responseData' => $responseData]);
+        $summary = $responseData['choices'][0]['message']['content'] ?? null;
 
-        if (!isset($responseData['choices'][0]['message']['content'])) {
+        if (!$summary) {
             \Log::error('Invalid response structure from ChatGPT.', ['responseData' => $responseData]);
-            return response()->json([
-                'error' => 'Invalid response structure from ChatGPT.',
-                'body' => $responseData
-            ], 500);
+            return response()->json(['error' => 'Invalid response from ChatGPT.'], 500);
         }
 
-        $summary = $responseData['choices'][0]['message']['content'];
         \Log::info('Summary generated.', ['summary' => $summary]);
 
-        // Save summary to database
-        $saved = GameSummary::create([
-            'user_input' => $game,
-            'summary' => $summary,
-        ]);
+        // Save or update DB
+        $saved = GameSummary::updateOrCreate(
+            ['user_input' => $game],
+            ['summary' => $summary]
+        );
+
         \Log::info('Summary saved to DB.', ['saved' => $saved]);
 
         return response()->json($saved);
