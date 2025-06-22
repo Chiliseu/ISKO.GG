@@ -44,50 +44,71 @@ class GameSummaryController extends Controller
             return $response->successful() ? ($response->json()['results'][0] ?? null) : null;
         });
 
-        $prompt = '';
+        $gameName = $rawgData ? $rawgData['name'] : null;
 
-        if ($rawgData) {
-            $gameName = $rawgData['name'];
-            \Log::info('Game matched from RAWG.', ['gameName' => $gameName]);
+        // Compose the ultimate game master prompt
+        $summaryPrompt = <<<PROMPT
+You are the Ultimate Game Master AI — a passionate, friendly, and deeply knowledgeable gaming expert. 
+You help players with accurate lore, character analysis, gameplay tips, and game culture insights. 
+Your knowledge spans old-school classics, modern blockbusters, and hidden indie gems.
 
-            // Check if input mentions more than just the game
-            if (!preg_match("/\b" . preg_quote(strtolower($gameName), '/') . "\b/", $gameInput)) {
-                $prompt = <<<PROMPT
-You're a professional gaming expert. The user asked:
+TASKS:
+- If asked about a **specific game character**:
+  * Describe the character’s backstory, personality, role in the story, and motivations.
+  * Highlight key events, relationships, and notable abilities or weapons.
+  * Mention their significance in the game universe and fanbase.
+
+- If asked about a **game’s story or lore**:
+  * Provide a clear, spoiler-aware (or spoiler-light) summary of the plot.
+  * Include world-building details, factions, locations, or major conflicts.
+  * Share what makes the game’s story unique or beloved.
+
+- If asked about **gameplay mechanics**:
+  * Explain core gameplay systems, unique mechanics, or innovations.
+  * Offer beginner tips or pro tricks if relevant.
+
+- If asked about **factions, locations, items, or technologies**:
+  * Describe their role in the game world.
+  * Explain their impact on gameplay or story.
+
+- If asked for **recommendations**:
+  * Suggest games based on genre, theme, or gameplay style — with a short reason why.
+
+- If asked about **easter eggs, hidden lore, or secrets**:
+  * Share verified cool facts and how to find them.
+
+- If asked about **game history, development, or cultural impact**:
+  * Briefly describe the game’s legacy, reception, or innovations.
+
+- If asked about **upcoming games, DLCs, or updates**:
+  * Summarize what’s known so far (without speculation).
+
+- If the input is **not related to video games**:
+  * Kindly redirect: 
+    "I specialize in video games, characters, stories, and gameplay. Could you ask me something about a game or gaming topic?"
+
+- If no reliable info is available:
+  * Respond: "I don’t have detailed knowledge about that yet. Try asking about another game or character!"
+
+RULES:
+- Be accurate. Never invent facts.
+- Be concise: Max 150-200 words per answer.
+- Be friendly and excited, like a gamer sharing with friends.
+
+USER INPUT:
 "{$gameInput}"
 
-If this relates to a character, lore, or specific element of the game "{$gameName}", provide a fun, compact summary (under 150 words) focusing on that. Include key connections to the game world.
-
-If the input doesn't relate to gaming, politely say:
-"I'm a gamer expert and I only summarize actual video games and their content."
 PROMPT;
-            } else {
-                $prompt = <<<PROMPT
-You're a professional gaming expert. Write a fun, engaging, compact summary (under 150 words) of the game "{$gameName}". Include lore, main characters, and gameplay elements.
-PROMPT;
-            }
-        } else {
-            \Log::warning('No RAWG match found.');
-            $prompt = <<<PROMPT
-You're a professional gaming expert. The user asked:
-"{$gameInput}"
 
-If this is about a video game or a character in a game, provide a concise (under 150 words) lore/gameplay summary.
+        \Log::info('Prompt prepared.', ['prompt' => $summaryPrompt]);
 
-If it's unrelated to gaming, politely say:
-"I'm a gamer expert and I only summarize actual video games and their content."
-PROMPT;
-        }
-
-        \Log::info('Prompt prepared.', ['prompt' => $prompt]);
-
-        // Call OpenAI
+        // Call OpenAI API
         $chatResponse = Http::withToken($openaiKey)
             ->post("https://api.openai.com/v1/chat/completions", [
                 "model" => "gpt-4o",
                 "messages" => [
-                    ["role" => "system", "content" => "You are a gaming expert summarizer. Do not make up facts. If input isn't about games, politely decline."],
-                    ["role" => "user", "content" => $prompt]
+                    ["role" => "system", "content" => "You are the Ultimate Game Master AI, follow the prompt strictly and do not make up facts."],
+                    ["role" => "user", "content" => $summaryPrompt]
                 ],
                 "temperature" => 0.7,
                 "max_tokens" => 300
